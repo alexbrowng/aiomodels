@@ -1,0 +1,18 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Cache
+.cache/
+
+# IntelliJ IDEA
+.idea
+
+# Mac
+.DS_Store
+
+# Environment
+.env
+
+# Virtualenv
+.venv
