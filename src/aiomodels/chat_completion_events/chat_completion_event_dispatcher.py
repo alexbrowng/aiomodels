@@ -2,7 +2,7 @@ from aiomodels.chat_completion_events.chat_completion_event import ChatCompletio
 from aiomodels.chat_completion_events.chat_completion_event_handler import ChatCompletionEventHandler
 
 
-class ChatCompletionEventDispatcher:
+class ChatCompletionEventDispatcher(ChatCompletionEventHandler):
     def __init__(self, event_handlers: list[ChatCompletionEventHandler]):
         self._event_handlers = event_handlers
 
