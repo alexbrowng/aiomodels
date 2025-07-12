@@ -105,7 +105,7 @@ class FromMessage:
         if isinstance(message.content, str):
             content.append(FromMessage.from_assistant_content(message.content))
         else:
-            content.extend([FromMessage.from_assistant_content(c) for c in message.content])
+            content.extend([FromMessage.from_assistant_content(content) for content in message.content])
 
         if message.tool_calls:
             for tool_call in message.tool_calls:

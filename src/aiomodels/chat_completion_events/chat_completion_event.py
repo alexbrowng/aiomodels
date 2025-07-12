@@ -1,9 +1,12 @@
 import typing
 
 from aiomodels.chat_completion_events.content_delta_event import ContentDeltaEvent
-from aiomodels.chat_completion_events.finish_event import FinishEvent
-from aiomodels.chat_completion_events.start_event import StartEvent
+from aiomodels.chat_completion_events.content_start_event import ContentStartEvent
+from aiomodels.chat_completion_events.message_finish_event import MessageFinishEvent
+from aiomodels.chat_completion_events.message_start_event import MessageStartEvent
+from aiomodels.chat_completion_events.message_usage_event import MessageUsageEvent
 from aiomodels.chat_completion_events.tool_call_event import ToolCallEvent
-from aiomodels.chat_completion_events.usage_event import UsageEvent
 
-ChatCompletionEvent = typing.Union[ContentDeltaEvent, FinishEvent, StartEvent, ToolCallEvent, UsageEvent]
+ChatCompletionEvent = typing.Union[
+    ContentDeltaEvent, ContentStartEvent, MessageFinishEvent, MessageStartEvent, ToolCallEvent, MessageUsageEvent
+]

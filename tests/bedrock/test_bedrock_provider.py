@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 import respx
+
 from aiomodels.chat_completions.chat_completion import ChatCompletion
 from aiomodels.contents.text_content import TextContent
 from aiomodels.messages.system_message import SystemMessage

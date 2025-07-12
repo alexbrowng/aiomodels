@@ -1,6 +1,7 @@
 import openai_responses
 import pytest
 
+from aiomodels.chat_completion_events.content_delta_event import ContentDeltaEvent
 from aiomodels.chat_completion_events.to_chat_completion import ToChatCompletion
 from aiomodels.contents.text_content import TextContent
 from aiomodels.messages.system_message import SystemMessage
@@ -29,18 +30,18 @@ async def test_async_create_chat_completion_stream(openai_mock: openai_responses
         events.append(event)
 
     start = events[0]
-    assert start.type == "start"
+    assert start.type == "message_start"
     assert start.model == "gpt-4.1-nano-2025-04-14"
     assert start.name is None
 
-    content_deltas = [event.delta for event in events[1:-2]]
+    content_deltas = [event.delta for event in events[1:-2] if isinstance(event, ContentDeltaEvent)]
     assert "".join(content_deltas) == "Hello! How can I assist you today?"
 
     finish = events[-2]
-    assert finish.type == "finish"
+    assert finish.type == "message_finish"
 
     usage = events[-1]
-    assert usage.type == "usage"
+    assert usage.type == "message_usage"
     assert usage.prompt_tokens == 19
     assert usage.completion_tokens == 10
     assert usage.total_tokens == 29
@@ -93,7 +94,7 @@ async def test_async_create_chat_completion_stream_with_tools(openai_mock: opena
         events.append(event)
 
     start = events[0]
-    assert start.type == "start"
+    assert start.type == "message_start"
     assert start.model == "gpt-4.1-nano-2025-04-14"
     assert start.name is None
 
@@ -104,10 +105,10 @@ async def test_async_create_chat_completion_stream_with_tools(openai_mock: opena
     assert tool_calls.arguments == '{"location": "Tokyo"}'
 
     finish = events[-2]
-    assert finish.type == "finish"
+    assert finish.type == "message_finish"
 
     usage = events[-1]
-    assert usage.type == "usage"
+    assert usage.type == "message_usage"
     assert usage.prompt_tokens == 67
     assert usage.completion_tokens == 31
     assert usage.total_tokens == 98

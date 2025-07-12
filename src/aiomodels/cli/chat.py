@@ -40,7 +40,7 @@ async def chat(model: Model, parameters: Parameters, instructions: str | None, n
             if event.type == "content_delta":
                 print(event.delta, end="", flush=True)
 
-            if event.type == "finish" and event.finish_reason == "stop":
+            if event.type == "message_finish" and event.reason == "stop":
                 print()
 
         chat_completion = ToChatCompletion.from_chat_completion_events(events)

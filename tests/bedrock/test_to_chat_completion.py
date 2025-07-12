@@ -60,7 +60,7 @@ def test_to_chat_completion_tool_call():
     assert isinstance(tool_call, ToolCall)
     assert tool_call.id == "call1"
     assert tool_call.name == "get_weather"
-    assert tool_call.arguments == {"location": "Paris"}
+    assert tool_call.arguments == '{"location": "Paris"}'
     assert chat.message.content == []
     assert chat.usage is not None
     assert chat.usage.total_tokens == 5
@@ -76,7 +76,7 @@ def test_to_chat_completion_text_and_tool():
     assert len(chat.message.tool_calls) == 1
     assert chat.message.tool_calls[0].id == "call2"
     assert chat.message.tool_calls[0].name == "get_time"
-    assert chat.message.tool_calls[0].arguments == {}
+    assert chat.message.tool_calls[0].arguments == "{}"
     assert chat.finish_reason == "tool_calls"
     assert chat.usage is not None
     assert chat.usage.prompt_tokens == 7

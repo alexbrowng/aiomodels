@@ -1,10 +1,12 @@
 import pytest
+
 from aiomodels.chat_completion_events.content_delta_event import ContentDeltaEvent
-from aiomodels.chat_completion_events.finish_event import FinishEvent
-from aiomodels.chat_completion_events.start_event import StartEvent
+from aiomodels.chat_completion_events.content_start_event import ContentStartEvent
+from aiomodels.chat_completion_events.message_finish_event import MessageFinishEvent
+from aiomodels.chat_completion_events.message_start_event import MessageStartEvent
+from aiomodels.chat_completion_events.message_usage_event import MessageUsageEvent
 from aiomodels.chat_completion_events.to_chat_completion import ToChatCompletion
 from aiomodels.chat_completion_events.tool_call_event import ToolCallEvent
-from aiomodels.chat_completion_events.usage_event import UsageEvent
 from aiomodels.chat_completions.chat_completion import ChatCompletion
 from aiomodels.contents.text_content import TextContent
 from aiomodels.tools.tool_call import ToolCall
@@ -12,11 +14,12 @@ from aiomodels.tools.tool_call import ToolCall
 
 def test_from_chat_completion_events_text_only():
     events = [
-        StartEvent(model="gpt-4o-mini"),
-        ContentDeltaEvent(delta="Hello "),
-        ContentDeltaEvent(delta="world!"),
-        FinishEvent(finish_reason="stop"),
-        UsageEvent(prompt_tokens=1, completion_tokens=2, total_tokens=3),
+        MessageStartEvent(model="gpt-4o-mini"),
+        ContentStartEvent(index=0, content_type="text"),
+        ContentDeltaEvent(index=0, delta="Hello "),
+        ContentDeltaEvent(index=0, delta="world!"),
+        MessageFinishEvent(reason="stop"),
+        MessageUsageEvent(prompt_tokens=1, completion_tokens=2, total_tokens=3),
     ]
     chat = ToChatCompletion.from_chat_completion_events(events)
     assert isinstance(chat, ChatCompletion)
@@ -34,10 +37,10 @@ def test_from_chat_completion_events_text_only():
 
 def test_from_chat_completion_events_with_tool_call():
     events = [
-        StartEvent(model="gpt-4o-mini"),
-        ToolCallEvent(id="call1", name="get_weather", arguments={"location": "Paris"}),
-        FinishEvent(finish_reason="tool_calls"),
-        UsageEvent(prompt_tokens=2, completion_tokens=3, total_tokens=5),
+        MessageStartEvent(model="gpt-4o-mini"),
+        ToolCallEvent(id="call1", name="get_weather", arguments='{"location": "Paris"}'),
+        MessageFinishEvent(reason="tool_calls"),
+        MessageUsageEvent(prompt_tokens=2, completion_tokens=3, total_tokens=5),
     ]
     chat = ToChatCompletion.from_chat_completion_events(events)
     assert chat.finish_reason == "tool_calls"
@@ -46,18 +49,19 @@ def test_from_chat_completion_events_with_tool_call():
     assert isinstance(tool_call, ToolCall)
     assert tool_call.id == "call1"
     assert tool_call.name == "get_weather"
-    assert tool_call.arguments == {"location": "Paris"}
+    assert tool_call.arguments == '{"location": "Paris"}'
     assert chat.message.content == []
 
 
 def test_from_chat_completion_events_full_sequence():
     events = [
-        StartEvent(model="gpt-4o-mini", name="asst1"),
-        ContentDeltaEvent(delta="Hi "),
-        ContentDeltaEvent(delta="there!"),
-        ToolCallEvent(id="call2", name="get_time", arguments={}),
-        FinishEvent(finish_reason="stop"),
-        UsageEvent(prompt_tokens=5, completion_tokens=6, total_tokens=11),
+        MessageStartEvent(model="gpt-4o-mini", name="asst1"),
+        ContentStartEvent(index=0, content_type="text"),
+        ContentDeltaEvent(index=0, delta="Hi "),
+        ContentDeltaEvent(index=0, delta="there!"),
+        ToolCallEvent(id="call2", name="get_time", arguments="{}"),
+        MessageFinishEvent(reason="stop"),
+        MessageUsageEvent(prompt_tokens=5, completion_tokens=6, total_tokens=11),
     ]
     chat = ToChatCompletion.from_chat_completion_events(events)
     assert chat.message.name == "asst1"
@@ -73,9 +77,10 @@ def test_from_chat_completion_events_full_sequence():
 
 def test_from_chat_completion_events_missing_usage():
     events = [
-        StartEvent(model="gpt-4o-mini"),
-        ContentDeltaEvent(delta="Hi!"),
-        FinishEvent(finish_reason="stop"),
+        MessageStartEvent(model="gpt-4o-mini"),
+        ContentStartEvent(index=0, content_type="text"),
+        ContentDeltaEvent(index=0, delta="Hi!"),
+        MessageFinishEvent(reason="stop"),
     ]
 
     chat_completion = ToChatCompletion.from_chat_completion_events(events)
@@ -85,9 +90,11 @@ def test_from_chat_completion_events_missing_usage():
 @pytest.mark.xfail(reason="TODO: fix this")
 def test_from_chat_completion_events_missing_finish():
     events = [
-        StartEvent(model="gpt-4o-mini"),
-        ContentDeltaEvent(delta="Hi!"),
-        UsageEvent(prompt_tokens=1, completion_tokens=2, total_tokens=3),
+        MessageStartEvent(model="gpt-4o-mini"),
+        ContentStartEvent(index=0, content_type="text"),
+        ContentDeltaEvent(index=1, delta="Hi!"),
+        MessageFinishEvent(reason="stop"),
+        MessageUsageEvent(prompt_tokens=1, completion_tokens=2, total_tokens=3),
     ]
     with pytest.raises(Exception):
         ToChatCompletion.from_chat_completion_events(events)
@@ -95,19 +102,21 @@ def test_from_chat_completion_events_missing_finish():
 
 def test_from_chat_completion_events_with_and_without_name():
     events_with_name = [
-        StartEvent(model="gpt-4o-mini", name="asst2"),
-        ContentDeltaEvent(delta="Hello!"),
-        FinishEvent(finish_reason="stop"),
-        UsageEvent(prompt_tokens=1, completion_tokens=2, total_tokens=3),
+        MessageStartEvent(model="gpt-4o-mini", name="asst2"),
+        ContentStartEvent(index=0, content_type="text"),
+        ContentDeltaEvent(index=0, delta="Hello!"),
+        MessageFinishEvent(reason="stop"),
+        MessageUsageEvent(prompt_tokens=1, completion_tokens=2, total_tokens=3),
     ]
     chat = ToChatCompletion.from_chat_completion_events(events_with_name)
     assert chat.message.name == "asst2"
 
     events_without_name = [
-        StartEvent(model="gpt-4o-mini"),
-        ContentDeltaEvent(delta="Hello!"),
-        FinishEvent(finish_reason="stop"),
-        UsageEvent(prompt_tokens=1, completion_tokens=2, total_tokens=3),
+        MessageStartEvent(model="gpt-4o-mini"),
+        ContentStartEvent(index=0, content_type="text"),
+        ContentDeltaEvent(index=0, delta="Hello!"),
+        MessageFinishEvent(reason="stop"),
+        MessageUsageEvent(prompt_tokens=1, completion_tokens=2, total_tokens=3),
     ]
     chat = ToChatCompletion.from_chat_completion_events(events_without_name)
     assert chat.message.name is None

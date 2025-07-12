@@ -67,7 +67,9 @@ class FromMessage:
         return {"role": "user", "content": content}
 
     @staticmethod
-    def from_assistant_content(content: str | TextContent | JsonContent | RefusalContent) -> ContentBlockTypeDef:
+    def from_assistant_content(
+        content: str | TextContent | JsonContent | RefusalContent,
+    ) -> ContentBlockTypeDef:
         if isinstance(content, str):
             return {"text": content}
 

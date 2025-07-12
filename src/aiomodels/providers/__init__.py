@@ -12,6 +12,7 @@ from aiomodels.providers.openai.provider import OpenAIProvider
 from aiomodels.providers.openrouter.provider import OpenRouterProvider
 from aiomodels.providers.perplexity.provider import PerplexityProvider
 from aiomodels.providers.together.provider import TogetherProvider
+from aiomodels.providers.xai.provider import XAIProvider
 
 __all__ = [
     "AIMLProvider",
@@ -28,4 +29,5 @@ __all__ = [
     "OpenRouterProvider",
     "PerplexityProvider",
     "TogetherProvider",
+    "XAIProvider",
 ]

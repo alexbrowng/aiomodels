@@ -40,7 +40,7 @@ class ToChatCompletion:
 
         for block in message.content:
             if block.type == "text":
-                if response_format and isinstance(response_format, JsonSchemaResponseFormat):
+                if isinstance(response_format, JsonSchemaResponseFormat):
                     content.append(JsonContent(json=block.text))
                 else:
                     content.append(TextContent(text=block.text))

@@ -14,6 +14,7 @@ from aiomodels.providers import (
     OpenRouterProvider,
     PerplexityProvider,
     TogetherProvider,
+    XAIProvider,
 )
 from aiomodels.providers.provider import Provider
 
@@ -32,6 +33,7 @@ LLM_PROVIDERS = {
     "openrouter": OpenRouterProvider,
     "perplexity": PerplexityProvider,
     "together": TogetherProvider,
+    "xai": XAIProvider,
 }
 
 
