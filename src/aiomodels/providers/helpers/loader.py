@@ -9,6 +9,7 @@ from aiomodels.providers import (
     GoogleOpenAICompatibleProvider,
     GroqProvider,
     InceptionProvider,
+    MistralProvider,
     OllamaProvider,
     OpenAIProvider,
     OpenRouterProvider,
@@ -32,6 +33,7 @@ LLM_PROVIDERS = {
     "openai": OpenAIProvider,
     "openrouter": OpenRouterProvider,
     "perplexity": PerplexityProvider,
+    "mistral": MistralProvider,
     "together": TogetherProvider,
     "xai": XAIProvider,
 }

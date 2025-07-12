@@ -7,6 +7,7 @@ from aiomodels.providers.fireworks.provider import FireworksProvider
 from aiomodels.providers.google_openai_compatible.provider import GoogleOpenAICompatibleProvider
 from aiomodels.providers.groq.provider import GroqProvider
 from aiomodels.providers.inception.provider import InceptionProvider
+from aiomodels.providers.mistral.provider import MistralProvider
 from aiomodels.providers.ollama.provider import OllamaProvider
 from aiomodels.providers.openai.provider import OpenAIProvider
 from aiomodels.providers.openrouter.provider import OpenRouterProvider
@@ -24,6 +25,7 @@ __all__ = [
     "GoogleOpenAICompatibleProvider",
     "GroqProvider",
     "InceptionProvider",
+    "MistralProvider",
     "OllamaProvider",
     "OpenAIProvider",
     "OpenRouterProvider",
