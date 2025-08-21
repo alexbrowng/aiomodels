@@ -2,6 +2,7 @@ from aiomodels.providers.aiml.provider import AIMLProvider
 from aiomodels.providers.anthropic.provider import AnthropicProvider
 from aiomodels.providers.anthropic_openai_compatible.provider import AnthropicOpenAICompatibleProvider
 from aiomodels.providers.bedrock.provider import BedrockProvider
+from aiomodels.providers.chutes.provider import ChutesProvider
 from aiomodels.providers.deepseek.provider import DeepSeekProvider
 from aiomodels.providers.fireworks.provider import FireworksProvider
 from aiomodels.providers.google_openai_compatible.provider import GoogleOpenAICompatibleProvider
@@ -22,6 +23,7 @@ __all__ = [
     "AnthropicProvider",
     "AnthropicOpenAICompatibleProvider",
     "BedrockProvider",
+    "ChutesProvider",
     "DeepSeekProvider",
     "FireworksProvider",
     "GoogleOpenAICompatibleProvider",
