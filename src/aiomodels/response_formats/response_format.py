@@ -1,6 +1,7 @@
 import typing
 
+from aiomodels.response_formats.json_object_response_format import JsonObjectResponseFormat
 from aiomodels.response_formats.json_schema_response_format import JsonSchemaResponseFormat
 from aiomodels.response_formats.text_response_format import TextResponseFormat
 
-ResponseFormat = typing.Union[TextResponseFormat, JsonSchemaResponseFormat]
+ResponseFormat = typing.Union[TextResponseFormat, JsonObjectResponseFormat, JsonSchemaResponseFormat]
