@@ -21,10 +21,11 @@ class RequestArgs(typing.TypedDict):
     tools: typing.NotRequired[list[ChatCompletionToolParam]]
     temperature: typing.NotRequired[float]
     top_p: typing.NotRequired[float]
-    max_tokens: typing.NotRequired[int]
+    max_completion_tokens: typing.NotRequired[int]
     frequency_penalty: typing.NotRequired[float]
     presence_penalty: typing.NotRequired[float]
     response_format: typing.NotRequired[ResponseFormatText | ResponseFormatJSONSchema]
+    seed: typing.NotRequired[int]
     stop: typing.NotRequired[list[str]]
 
 
@@ -51,11 +52,13 @@ class FromArgs:
             if parameters.top_p is not None:
                 request["top_p"] = parameters.top_p
             if parameters.max_tokens is not None:
-                request["max_tokens"] = parameters.max_tokens
+                request["max_completion_tokens"] = parameters.max_tokens
             if parameters.frequency_penalty is not None:
                 request["frequency_penalty"] = parameters.frequency_penalty
             if parameters.presence_penalty is not None:
                 request["presence_penalty"] = parameters.presence_penalty
+            if parameters.seed is not None:
+                request["seed"] = parameters.seed
             if parameters.stop:
                 request["stop"] = parameters.stop
 
