@@ -56,9 +56,12 @@ def main():
     parser.add_argument("--output-price", type=float, default=None)
     parser.add_argument("--temperature", type=float, default=None)
     parser.add_argument("--top-p", type=float, default=None)
+    parser.add_argument("--top-k", type=int, default=None)
     parser.add_argument("--max-tokens", type=int, default=None)
     parser.add_argument("--frequency-penalty", type=float, default=None)
     parser.add_argument("--presence-penalty", type=float, default=None)
+    parser.add_argument("--repetition-penalty", type=float, default=None)
+    parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--stop", type=str, default=None)
     parser.add_argument("--name", type=str, default=None)
 
@@ -82,9 +85,12 @@ def main():
     parameters = Parameters(
         temperature=args.temperature,
         top_p=args.top_p,
+        top_k=args.top_k,
         max_tokens=args.max_tokens,
         frequency_penalty=args.frequency_penalty,
         presence_penalty=args.presence_penalty,
+        repetition_penalty=args.repetition_penalty,
+        seed=args.seed,
         stop=args.stop,
     )
 
