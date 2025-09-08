@@ -17,7 +17,7 @@ from aiomodels.tools.tools import Tools
 class RequestArgs(typing.TypedDict):
     model: ModelParam
     messages: list[MessageParam]
-    max_tokens: int
+    max_tokens: typing.NotRequired[int]
     tools: typing.NotRequired[list[ToolParam]]
     temperature: typing.NotRequired[float]
     top_p: typing.NotRequired[float]
@@ -37,11 +37,7 @@ class FromArgs:
     ) -> RequestArgs:
         messages_param, system_param = FromMessage.from_messages(messages)
 
-        request = RequestArgs(
-            model=model,
-            messages=messages_param,
-            max_tokens=1024,
-        )
+        request = RequestArgs(model=model, messages=messages_param)
 
         if system_param:
             request["system"] = system_param
@@ -56,6 +52,8 @@ class FromArgs:
                 request["temperature"] = parameters.temperature
             if parameters.top_p is not None:
                 request["top_p"] = parameters.top_p
+            if parameters.top_k is not None:
+                request["top_k"] = parameters.top_k
             if parameters.stop:
                 request["stop_sequences"] = parameters.stop
 
