@@ -24,17 +24,17 @@ class Base64Source:
 
     @staticmethod
     def from_file_path(file_path: pathlib.Path) -> "Base64Source":
-        mime_type, _ = mimetypes.guess_type(file_path)
-        mime_type = mime_type or "application/octet-stream"
+        media_type, _ = mimetypes.guess_type(file_path)
+        media_type = media_type or "application/octet-stream"
 
         file_bytes = file_path.read_bytes()
-        file_base64 = base64.b64encode(file_bytes).decode("utf-8")
+        data = base64.b64encode(file_bytes).decode("utf-8")
 
-        return Base64Source(data=file_base64, media_type=mime_type)
+        return Base64Source(data=data, media_type=media_type)
 
     @staticmethod
     def from_base64_url(base64_url: str) -> "Base64Source":
-        header, base64_data = base64_url.split(";base64,")
-        mime_type = header.split(":")[1]
+        header, data = base64_url.split(";base64,")
+        media_type = header.split(":")[1]
 
-        return Base64Source(data=base64_data, media_type=mime_type)
+        return Base64Source(data=data, media_type=media_type)
