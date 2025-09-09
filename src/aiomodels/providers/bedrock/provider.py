@@ -80,5 +80,9 @@ class BedrockProvider(Provider):
 
             response = await client.converse_stream(**request)
 
-            async for event in ToChatCompletionEvent(response=response, model=model, name=name):
+            content_type = self.response_format_content_type(response_format)
+
+            async for event in ToChatCompletionEvent(
+                response=response, model=model, name=name, content_type=content_type
+            ):
                 yield event

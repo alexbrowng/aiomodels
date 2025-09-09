@@ -46,5 +46,7 @@ class MistralProvider(OpenAIProvider):
         except APIError as e:
             raise LLMError(e.message) from None
 
-        async for event in ToChatCompletionEvent(stream=stream, model=model, name=name):
+        content_type = self.response_format_content_type(response_format)
+
+        async for event in ToChatCompletionEvent(stream=stream, model=model, name=name, content_type=content_type):
             yield event

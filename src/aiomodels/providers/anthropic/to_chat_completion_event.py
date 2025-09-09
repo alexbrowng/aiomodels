@@ -13,20 +13,27 @@ from aiomodels.chat_completion_events.message_usage_event import MessageUsageEve
 from aiomodels.chat_completion_events.tool_call_event import ToolCallEvent
 from aiomodels.models.model import Model
 
+ContentContentType = typing.Literal["text", "json", "refusal"]
+
 
 class ToChatCompletionEvent:
-    def __init__(self, stream: AsyncStream[MessageStreamEvent], model: Model, name: str | None = None):
+    def __init__(
+        self,
+        stream: AsyncStream[MessageStreamEvent],
+        model: Model,
+        content_type: ContentContentType = "text",
+        name: str | None = None,
+    ):
         self._stream = stream
         self._model = model
+        self._content_type: ContentContentType = content_type
         self._name = name
         self._tool_calls = []
 
     def _message_start_event(self) -> MessageStartEvent:
         return ChatCompletionEventFactory.message_start(model=self._model.id, name=self._name)
 
-    def _content_start_event(
-        self, index: int, content_type: typing.Literal["text", "json", "refusal"]
-    ) -> ContentStartEvent:
+    def _content_start_event(self, index: int, content_type: ContentContentType) -> ContentStartEvent:
         return ChatCompletionEventFactory.content_start(index=index, content_type=content_type)
 
     def _content_delta_event(self, index: int, delta: str) -> ContentDeltaEvent:
@@ -80,7 +87,7 @@ class ToChatCompletionEvent:
             elif event.type == "content_block_start":
                 if event.content_block.type == "text":
                     index += 1
-                    yield self._content_start_event(index=index, content_type="text")
+                    yield self._content_start_event(index=index, content_type=self._content_type)
 
                 if event.content_block.type == "tool_use":
                     self._start_tool_call(event.content_block.id, event.content_block.name)
