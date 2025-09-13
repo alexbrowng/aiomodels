@@ -35,20 +35,25 @@ class FromArgs:
         parameters: Parameters | None = None,
         response_format: ResponseFormat | None = None,
     ) -> RequestArgs:
-        request = RequestArgs(
-            modelId=model_id,
-            system=[
-                FromMessage.from_system_message(message) for message in messages if isinstance(message, SystemMessage)
-            ],
-            messages=[
-                FromMessage.from_message(message) for message in messages if not isinstance(message, SystemMessage)
-            ],
-        )
+        system_param = []
+        messages_param = []
+
+        for message in messages:
+            if isinstance(message, SystemMessage):
+                system_param.append(FromMessage.from_system_message(message))
+            else:
+                messages_param.append(FromMessage.from_message(message))
+
+        request = RequestArgs(modelId=model_id, messages=messages_param)
+
+        if tools:
+            system_param.extend(FromMessage.from_tools(tools))
+            request["toolConfig"] = FromTool.from_tools(tools)
+
+        if system_param:
+            request["system"] = system_param
 
         if parameters:
             request["inferenceConfig"] = FromParameters.from_parameters(parameters)
-
-        if tools:
-            request["toolConfig"] = FromTool.from_tools(tools)
 
         return request

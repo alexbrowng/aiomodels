@@ -37,6 +37,9 @@ async def chat(model: Model, parameters: Parameters, instructions: str | None, n
         ):
             events.append(event)
 
+            if event.type == "content_start" and event.content:
+                print(event.content, end="", flush=True)
+
             if event.type == "content_delta":
                 print(event.delta, end="", flush=True)
 

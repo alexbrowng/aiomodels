@@ -13,6 +13,8 @@ from aiomodels.messages.assistant_message import AssistantMessage
 from aiomodels.messages.system_message import SystemMessage
 from aiomodels.messages.tool_message import ToolMessage
 from aiomodels.messages.user_message import UserMessage
+from aiomodels.tools.tool import Tool
+from aiomodels.tools.tools import Tools
 
 IMAGE_FORMAT = typing.Literal["gif", "jpeg", "png", "webp"]
 FILE_FORMAT = typing.Literal["csv", "doc", "docx", "html", "md", "pdf", "txt", "xls", "xlsx"]
@@ -20,8 +22,16 @@ FILE_FORMAT = typing.Literal["csv", "doc", "docx", "html", "md", "pdf", "txt", "
 
 class FromMessage:
     @staticmethod
+    def from_system_content(content: str | TextContent) -> ContentBlockTypeDef:
+        if isinstance(content, str):
+            return {"text": content}
+
+        if isinstance(content, TextContent):
+            return {"text": content.text}
+
+    @staticmethod
     def from_system_message(message: SystemMessage) -> ContentBlockTypeDef:
-        return {"text": message.content}
+        return FromMessage.from_system_content(message.content)
 
     @staticmethod
     def from_user_content(
@@ -139,3 +149,14 @@ class FromMessage:
                 return FromMessage.from_assistant_message(message)
             case ToolMessage():
                 return FromMessage.from_tool_message(message)
+
+    @staticmethod
+    def from_tools(tools: Tools | typing.Sequence[Tool]) -> list[ContentBlockTypeDef]:
+        system_param = []
+
+        if isinstance(tools, Tools) and tools.instructions:
+            system_param.extend(FromMessage.from_system_content(tools.instructions))
+
+        system_param.extend(FromMessage.from_system_content(tool.instructions) for tool in tools if tool.instructions)
+
+        return system_param

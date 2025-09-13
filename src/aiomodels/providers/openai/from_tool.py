@@ -1,3 +1,5 @@
+import typing
+
 from openai.types.chat import ChatCompletionToolParam
 from openai.types.shared_params import FunctionDefinition
 
@@ -19,5 +21,5 @@ class FromTool:
         )
 
     @staticmethod
-    def from_tools(tools: Tools | list[Tool]) -> list[ChatCompletionToolParam]:
+    def from_tools(tools: Tools | typing.Sequence[Tool]) -> list[ChatCompletionToolParam]:
         return [FromTool.from_tool(tool) for tool in tools]

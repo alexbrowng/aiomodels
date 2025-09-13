@@ -2,7 +2,11 @@ import openai_responses
 import pytest
 
 from aiomodels.chat_completion_events.content_delta_event import ContentDeltaEvent
+from aiomodels.chat_completion_events.content_start_event import ContentStartEvent
 from aiomodels.chat_completion_events.to_chat_completion import ToChatCompletion
+from aiomodels.chat_completion_events.tool_call_delta_event import ToolCallDeltaEvent
+from aiomodels.chat_completion_events.tool_call_finish_event import ToolCallFinishEvent
+from aiomodels.chat_completion_events.tool_call_start_event import ToolCallStartEvent
 from aiomodels.contents.text_content import TextContent
 from aiomodels.messages.system_message import SystemMessage
 from aiomodels.messages.user_message import UserMessage
@@ -34,7 +38,12 @@ async def test_async_create_chat_completion_stream(openai_mock: openai_responses
     assert start.model == "gpt-4.1-nano-2025-04-14"
     assert start.name is None
 
-    content_deltas = [event.delta for event in events[1:-2] if isinstance(event, ContentDeltaEvent)]
+    content_events = [
+        event for event in events if isinstance(event, ContentStartEvent) or isinstance(event, ContentDeltaEvent)
+    ]
+    content_deltas = [
+        event.content or "" if isinstance(event, ContentStartEvent) else event.delta for event in content_events
+    ]
     assert "".join(content_deltas) == "Hello! How can I assist you today?"
 
     finish = events[-2]
@@ -98,11 +107,15 @@ async def test_async_create_chat_completion_stream_with_tools(openai_mock: opena
     assert start.model == "gpt-4.1-nano-2025-04-14"
     assert start.name is None
 
-    tool_calls = events[1]
-    assert tool_calls.type == "tool_call"
-    assert tool_calls.id == "call_PieqNSej6kM9hgYbcQdbZSaC"
-    assert tool_calls.name == "get_weather"
-    assert tool_calls.arguments == '{"location": "Tokyo"}'
+    start = events[1]
+    deltas = events[2:-3]
+    finish = events[-3]
+    assert isinstance(start, ToolCallStartEvent)
+    assert all(isinstance(delta, ToolCallDeltaEvent) for delta in deltas)
+    assert isinstance(finish, ToolCallFinishEvent)
+    assert start.id == "call_PieqNSej6kM9hgYbcQdbZSaC"
+    assert start.name == "get_weather"
+    assert "".join(delta.arguments for delta in deltas) == '{"location": "Tokyo"}'
 
     finish = events[-2]
     assert finish.type == "message_finish"

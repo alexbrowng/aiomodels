@@ -3,7 +3,9 @@ from aiomodels.chat_completion_events.content_delta_event import ContentDeltaEve
 from aiomodels.chat_completion_events.message_finish_event import MessageFinishEvent
 from aiomodels.chat_completion_events.message_start_event import MessageStartEvent
 from aiomodels.chat_completion_events.message_usage_event import MessageUsageEvent
-from aiomodels.chat_completion_events.tool_call_event import ToolCallEvent
+from aiomodels.chat_completion_events.tool_call_delta_event import ToolCallDeltaEvent
+from aiomodels.chat_completion_events.tool_call_finish_event import ToolCallFinishEvent
+from aiomodels.chat_completion_events.tool_call_start_event import ToolCallStartEvent
 
 
 def test_start_event_creation():
@@ -27,11 +29,20 @@ def test_content_delta_event_creation():
 
 
 def test_tool_call_event_creation():
-    event = ToolCallEvent(id="call1", name="get_weather", arguments='{"location": "Paris"}')
-    assert event.id == "call1"
-    assert event.name == "get_weather"
-    assert event.arguments == '{"location": "Paris"}'
-    assert event.type == "tool_call"
+    start = ToolCallStartEvent(id="call1", name="get_weather", arguments=None)
+    assert start.id == "call1"
+    assert start.name == "get_weather"
+    assert start.arguments is None
+    assert start.type == "tool_call_start"
+
+    delta = ToolCallDeltaEvent(id="call1", arguments='{"location": "Paris"}')
+    assert delta.id == "call1"
+    assert delta.arguments == '{"location": "Paris"}'
+    assert delta.type == "tool_call_delta"
+
+    finish = ToolCallFinishEvent(id="call1")
+    assert finish.id == "call1"
+    assert finish.type == "tool_call_finish"
 
 
 def test_usage_event_creation():
@@ -57,11 +68,20 @@ def test_factory_content_delta():
 
 
 def test_factory_tool_call():
-    event = ChatCompletionEventFactory.tool_call(id="call1", name="get_weather", arguments='{"location": "Paris"}')
-    assert isinstance(event, ToolCallEvent)
-    assert event.id == "call1"
-    assert event.name == "get_weather"
-    assert event.arguments == '{"location": "Paris"}'
+    start = ChatCompletionEventFactory.tool_call_start(id="call1", name="get_weather", arguments=None)
+    assert isinstance(start, ToolCallStartEvent)
+    assert start.id == "call1"
+    assert start.name == "get_weather"
+    assert start.arguments is None
+
+    delta = ChatCompletionEventFactory.tool_call_delta(id="call1", arguments="{}")
+    assert isinstance(delta, ToolCallDeltaEvent)
+    assert delta.id == "call1"
+    assert delta.arguments == "{}"
+
+    finish = ChatCompletionEventFactory.tool_call_finish(id="call1")
+    assert isinstance(finish, ToolCallFinishEvent)
+    assert finish.id == "call1"
 
 
 def test_factory_finish():

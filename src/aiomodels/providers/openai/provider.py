@@ -29,8 +29,8 @@ class OpenAIProvider(Provider):
     async def chat_completion(
         self,
         model: Model,
-        messages: list[Message],
-        tools: Tools | list[Tool] | None = None,
+        messages: typing.Sequence[Message],
+        tools: Tools | typing.Sequence[Tool] | None = None,
         response_format: ResponseFormat | None = None,
         parameters: Parameters | None = None,
         name: str | None = None,
@@ -52,8 +52,8 @@ class OpenAIProvider(Provider):
     async def chat_completion_stream(
         self,
         model: Model,
-        messages: list[Message],
-        tools: Tools | list[Tool] | None = None,
+        messages: typing.Sequence[Message],
+        tools: Tools | typing.Sequence[Tool] | None = None,
         response_format: ResponseFormat | None = None,
         parameters: Parameters | None = None,
         name: str | None = None,
@@ -76,6 +76,13 @@ class OpenAIProvider(Provider):
             raise LLMError(e.message) from None
 
         content_type = self.response_format_content_type(response_format)
+        content_name = self.response_format_content_name(response_format)
 
-        async for event in ToChatCompletionEvent(stream=stream, model=model, name=name, content_type=content_type):
+        async for event in ToChatCompletionEvent(
+            stream=stream,
+            model=model,
+            content_type=content_type,
+            content_name=content_name,
+            message_name=name,
+        ):
             yield event

@@ -44,6 +44,7 @@ class AnthropicProvider(Provider):
             parameters=parameters,
             response_format=response_format,
         )
+
         try:
             message = await self._client.messages.create(**request)
         except APIError as e:
@@ -74,6 +75,13 @@ class AnthropicProvider(Provider):
             raise LLMError(str(e)) from None
 
         content_type = self.response_format_content_type(response_format)
+        content_name = self.response_format_content_name(response_format)
 
-        async for event in ToChatCompletionEvent(stream=stream, model=model, name=name, content_type=content_type):
+        async for event in ToChatCompletionEvent(
+            stream=stream,
+            model=model,
+            content_type=content_type,
+            content_name=content_name,
+            message_name=name,
+        ):
             yield event

@@ -1,4 +1,5 @@
 import dataclasses
+import typing
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -12,6 +13,7 @@ class Parameters:
     presence_penalty: float | None = None
     seed: int | None = None
     stop: list[str] | None = None
+    type: typing.Literal["parameters"] = "parameters"
 
     def __str__(self) -> str:
         return f"Parameters(max_tokens={self.max_tokens}, temperature={self.temperature}, top_p={self.top_p}, top_k={self.top_k}, frequency_penalty={self.frequency_penalty}, repetition_penalty={self.repetition_penalty}, presence_penalty={self.presence_penalty}, seed={self.seed}, stop={self.stop})"

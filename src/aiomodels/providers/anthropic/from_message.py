@@ -17,6 +17,8 @@ from aiomodels.messages.message import Message
 from aiomodels.messages.system_message import SystemMessage
 from aiomodels.messages.tool_message import ToolMessage
 from aiomodels.messages.user_message import UserMessage
+from aiomodels.tools.tool import Tool
+from aiomodels.tools.tools import Tools
 
 IMAGE_MEDIA_TYPE = typing.Literal["image/png", "image/jpeg", "image/gif", "image/webp"]
 DOCUMENT_MEDIA_TYPE = typing.Literal["application/pdf"]
@@ -148,7 +150,7 @@ class FromMessage:
                 return FromMessage.from_tool_message(message)
 
     @staticmethod
-    def from_messages(messages: list[Message]) -> tuple[list[MessageParam], list[TextBlockParam]]:
+    def from_messages(messages: typing.Sequence[Message]) -> tuple[list[MessageParam], list[TextBlockParam]]:
         messages_param = []
         system_param = []
 
@@ -159,3 +161,14 @@ class FromMessage:
                 messages_param.append(FromMessage.from_message(message))
 
         return messages_param, system_param
+
+    @staticmethod
+    def from_tools(tools: Tools | typing.Sequence[Tool]) -> list[TextBlockParam]:
+        system_param = []
+
+        if isinstance(tools, Tools) and tools.instructions:
+            system_param.extend(FromMessage.from_system_content(tools.instructions))
+
+        system_param.extend(FromMessage.from_system_content(tool.instructions) for tool in tools if tool.instructions)
+
+        return system_param

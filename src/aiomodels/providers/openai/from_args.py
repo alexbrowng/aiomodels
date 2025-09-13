@@ -6,6 +6,7 @@ from openai.types.shared_params.response_format_json_schema import ResponseForma
 from openai.types.shared_params.response_format_text import ResponseFormatText
 
 from aiomodels.messages.message import Message
+from aiomodels.messages.system_message import SystemMessage
 from aiomodels.parameters.parameters import Parameters
 from aiomodels.providers.openai.from_message import FromMessage
 from aiomodels.providers.openai.from_response_format import FromResponseFormat
@@ -33,17 +34,25 @@ class FromArgs:
     @staticmethod
     def from_args(
         model: str,
-        messages: list[Message],
-        tools: Tools | list[Tool] | None,
+        messages: typing.Sequence[Message],
+        tools: Tools | typing.Sequence[Tool] | None,
         parameters: Parameters | None,
         response_format: ResponseFormat | None,
     ) -> RequestArgs:
-        request = RequestArgs(
-            model=model,
-            messages=[FromMessage.from_message(message) for message in messages],
-        )
+        system_messages = []
+        chat_messages = []
+
+        for message in messages:
+            if isinstance(message, SystemMessage):
+                system_messages.append(FromMessage.from_system_message(message))
+            else:
+                chat_messages.append(FromMessage.from_message(message))
+
+        request = RequestArgs(model=model, messages=system_messages + chat_messages)
 
         if tools:
+            system_messages.extend(FromMessage.from_tools(tools))
+            request["messages"] = system_messages + chat_messages
             request["tools"] = FromTool.from_tools(tools)
 
         if parameters:

@@ -7,7 +7,7 @@ from aiomodels.usage.usage import Usage
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class ChatCompletion:
-    finish_reason: typing.Literal["stop", "tool_calls"]
+    finish_reason: typing.Literal["stop", "tool_calls", "length"]
     message: AssistantMessage
     usage: Usage | None = None
 

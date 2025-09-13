@@ -19,6 +19,12 @@ class Provider(abc.ABC):
         is_json_object = isinstance(response_format, JsonObjectResponseFormat)
         return "json" if is_json_schema or is_json_object else "text"
 
+    def response_format_content_name(self, response_format: ResponseFormat | None) -> str | None:
+        if isinstance(response_format, JsonSchemaResponseFormat):
+            return response_format.json_schema.name
+        elif response_format:
+            return response_format.name
+
     @abc.abstractmethod
     def chat_completion(
         self,

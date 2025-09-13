@@ -1,3 +1,5 @@
+import typing
+
 from anthropic.types.tool_param import ToolParam
 
 from aiomodels.tools.tool import Tool
@@ -14,5 +16,5 @@ class FromTool:
         }
 
     @staticmethod
-    def from_tools(tools: Tools | list[Tool]) -> list[ToolParam]:
+    def from_tools(tools: Tools | typing.Sequence[Tool]) -> list[ToolParam]:
         return [FromTool.from_tool(tool) for tool in tools]

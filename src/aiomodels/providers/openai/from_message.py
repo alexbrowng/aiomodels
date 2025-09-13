@@ -23,10 +23,11 @@ from aiomodels.contents.json_content import JsonContent
 from aiomodels.contents.refusal_content import RefusalContent
 from aiomodels.contents.text_content import TextContent
 from aiomodels.messages.assistant_message import AssistantMessage
-from aiomodels.messages.message import Message
 from aiomodels.messages.system_message import SystemMessage
 from aiomodels.messages.tool_message import ToolMessage
 from aiomodels.messages.user_message import UserMessage
+from aiomodels.tools.tool import Tool
+from aiomodels.tools.tools import Tools
 
 AUDIO_FORMAT = typing.Literal["mp3", "wav"]
 
@@ -149,7 +150,7 @@ class FromMessage:
         return param
 
     @staticmethod
-    def from_message(message: Message) -> ChatCompletionMessageParam:
+    def from_message(message: UserMessage | AssistantMessage | ToolMessage) -> ChatCompletionMessageParam:
         match message:
             case UserMessage():
                 return FromMessage.from_user_message(message)
@@ -157,5 +158,16 @@ class FromMessage:
                 return FromMessage.from_assistant_message(message)
             case ToolMessage():
                 return FromMessage.from_tool_message(message)
-            case SystemMessage():
-                return FromMessage.from_system_message(message)
+
+    @staticmethod
+    def from_tools(tools: Tools | typing.Sequence[Tool]) -> list[ChatCompletionSystemMessageParam]:
+        system_messages = []
+
+        if isinstance(tools, Tools) and tools.instructions:
+            system_messages.append(FromMessage.from_system_content(tools.instructions))
+
+        system_messages.extend(
+            FromMessage.from_system_content(tool.instructions) for tool in tools if tool.instructions
+        )
+
+        return system_messages

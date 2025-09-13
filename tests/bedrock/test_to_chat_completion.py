@@ -1,44 +1,89 @@
+from types_aiobotocore_bedrock_runtime.type_defs import ConverseResponseTypeDef
+
 from aiomodels.chat_completions.chat_completion import ChatCompletion
 from aiomodels.contents.text_content import TextContent
 from aiomodels.providers.bedrock.to_chat_completion import ToChatCompletion
 from aiomodels.tools.tool_call import ToolCall
 
 
-def make_converse_response_text():
+def make_converse_response_text() -> ConverseResponseTypeDef:
     return {
-        "output": {"message": {"content": [{"text": "Hello world!"}]}},
+        "output": {"message": {"role": "assistant", "content": [{"text": "Hello world!"}]}},
         "usage": {"inputTokens": 10, "outputTokens": 5, "totalTokens": 15},
-        "stopReason": "stop",
+        "stopReason": "end_turn",
+        "metrics": {
+            "latencyMs": 100,
+        },
+        "additionalModelResponseFields": {},
+        "trace": {},
+        "performanceConfig": {},
+        "ResponseMetadata": {
+            "RequestId": "123",
+            "HTTPStatusCode": 200,
+            "HTTPHeaders": {},
+            "RetryAttempts": 0,
+            "HostId": "123",
+        },
     }
 
 
-def make_converse_response_tool_call():
+def make_converse_response_tool_call() -> ConverseResponseTypeDef:
     return {
         "output": {
             "message": {
-                "content": [{"toolUse": {"toolUseId": "call1", "name": "get_weather", "input": {"location": "Paris"}}}]
+                "role": "assistant",
+                "content": [
+                    {"toolUse": {"toolUseId": "call1", "name": "get_weather", "input": {"location": "Paris"}}}
+                ],
             }
         },
         "usage": {"inputTokens": 2, "outputTokens": 3, "totalTokens": 5},
         "stopReason": "tool_use",
+        "metrics": {
+            "latencyMs": 100,
+        },
+        "additionalModelResponseFields": {},
+        "trace": {},
+        "performanceConfig": {},
+        "ResponseMetadata": {
+            "RequestId": "123",
+            "HTTPStatusCode": 200,
+            "HTTPHeaders": {},
+            "RetryAttempts": 0,
+            "HostId": "123",
+        },
     }
 
 
-def make_converse_response_text_and_tool():
+def make_converse_response_text_and_tool() -> ConverseResponseTypeDef:
     return {
         "output": {
             "message": {
-                "content": [{"text": "Hi!"}, {"toolUse": {"toolUseId": "call2", "name": "get_time", "input": {}}}]
+                "role": "assistant",
+                "content": [{"text": "Hi!"}, {"toolUse": {"toolUseId": "call2", "name": "get_time", "input": {}}}],
             }
         },
         "usage": {"inputTokens": 7, "outputTokens": 8, "totalTokens": 15},
         "stopReason": "tool_use",
+        "metrics": {
+            "latencyMs": 100,
+        },
+        "additionalModelResponseFields": {},
+        "trace": {},
+        "performanceConfig": {},
+        "ResponseMetadata": {
+            "RequestId": "123",
+            "HTTPStatusCode": 200,
+            "HTTPHeaders": {},
+            "RetryAttempts": 0,
+            "HostId": "123",
+        },
     }
 
 
 def test_to_chat_completion_text_only():
     response = make_converse_response_text()
-    chat = ToChatCompletion.from_converse_response(response)  # type: ignore
+    chat = ToChatCompletion.from_converse_response(response)
     assert isinstance(chat, ChatCompletion)
     assert len(chat.message.content) == 1
     assert isinstance(chat.message.content[0], TextContent)
@@ -68,7 +113,7 @@ def test_to_chat_completion_tool_call():
 
 def test_to_chat_completion_text_and_tool():
     response = make_converse_response_text_and_tool()
-    chat = ToChatCompletion.from_converse_response(response, name="asst1")  # type: ignore
+    chat = ToChatCompletion.from_converse_response(response, message_name="asst1")
     assert chat.message.name == "asst1"
     assert len(chat.message.content) == 1
     assert isinstance(chat.message.content[0], TextContent)

@@ -54,11 +54,13 @@ class BedrockProvider(Provider):
                 parameters=parameters,
                 response_format=response_format,
             )
+
             try:
                 response = await client.converse(**request)
             except Exception as e:
                 raise LLMError(e) from None
-            return ToChatCompletion.from_converse_response(response, name)
+
+            return ToChatCompletion.from_converse_response(response, response_format, name)
 
     async def chat_completion_stream(
         self,
@@ -81,8 +83,13 @@ class BedrockProvider(Provider):
             response = await client.converse_stream(**request)
 
             content_type = self.response_format_content_type(response_format)
+            content_name = self.response_format_content_name(response_format)
 
             async for event in ToChatCompletionEvent(
-                response=response, model=model, name=name, content_type=content_type
+                response=response,
+                model=model,
+                content_type=content_type,
+                content_name=content_name,
+                message_name=name,
             ):
                 yield event
