@@ -23,16 +23,26 @@ from aiomodels.contents.json_content import JsonContent
 from aiomodels.contents.refusal_content import RefusalContent
 from aiomodels.contents.text_content import TextContent
 from aiomodels.messages.assistant_message import AssistantMessage
+from aiomodels.messages.message import Message
 from aiomodels.messages.system_message import SystemMessage
 from aiomodels.messages.tool_message import ToolMessage
 from aiomodels.messages.user_message import UserMessage
 from aiomodels.tools.tool import Tool
+from aiomodels.tools.tool_call import ToolCall
 from aiomodels.tools.tools import Tools
 
 AUDIO_FORMAT = typing.Literal["mp3", "wav"]
 
 
 class FromMessage:
+    @staticmethod
+    def from_system_content(content: str | TextContent) -> ChatCompletionContentPartTextParam:
+        if isinstance(content, str):
+            return ChatCompletionContentPartTextParam(text=content, type="text")
+
+        if isinstance(content, TextContent):
+            return ChatCompletionContentPartTextParam(text=content.text, type="text")
+
     @staticmethod
     def from_user_content(
         content: str | TextContent | ImageContent | DocumentContent | AudioContent,
@@ -81,27 +91,44 @@ class FromMessage:
             return ChatCompletionContentPartRefusalParam(refusal=content.refusal, type="refusal")
 
     @staticmethod
-    def from_system_content(content: str | TextContent) -> ChatCompletionContentPartTextParam:
-        if isinstance(content, str):
-            return ChatCompletionContentPartTextParam(text=content, type="text")
-
-        if isinstance(content, TextContent):
-            return ChatCompletionContentPartTextParam(text=content.text, type="text")
+    def from_tool_calls(tool_calls: typing.Sequence[ToolCall]) -> list[ChatCompletionMessageToolCallParam]:
+        return [
+            ChatCompletionMessageToolCallParam(
+                id=tool_call.id,
+                type="function",
+                function={
+                    "name": tool_call.name,
+                    "arguments": json.dumps(tool_call.arguments) if tool_call.arguments else "{}",
+                },
+            )
+            for tool_call in tool_calls
+        ]
 
     @staticmethod
-    def from_user_message(message: UserMessage) -> ChatCompletionUserMessageParam:
+    def from_user_message(message: UserMessage) -> list[ChatCompletionMessageParam]:
+        messages_param: list[ChatCompletionMessageParam] = []
+
         content = []
         if isinstance(message.content, str):
             content.append(FromMessage.from_user_content(message.content))
         else:
             content.extend([FromMessage.from_user_content(content) for content in message.content])
 
-        param = ChatCompletionUserMessageParam(role="user", content=content)
+        user_message_param = ChatCompletionUserMessageParam(role="user", content=content)
+        messages_param.append(user_message_param)
 
         if message.name:
-            param["name"] = message.name
+            user_message_param["name"] = message.name
 
-        return param
+        if message.tool_calls:
+            assistant_message_param = ChatCompletionAssistantMessageParam(
+                role="assistant", tool_calls=FromMessage.from_tool_calls(message.tool_calls)
+            )
+            messages_param.append(assistant_message_param)
+            if message.name:
+                assistant_message_param["name"] = message.name
+
+        return messages_param
 
     @staticmethod
     def from_assistant_message(message: AssistantMessage) -> ChatCompletionAssistantMessageParam:
@@ -112,23 +139,10 @@ class FromMessage:
         else:
             content.extend([FromMessage.from_assistant_content(content) for content in message.content])
 
-        param = ChatCompletionAssistantMessageParam(
-            role="assistant",
-            content=[FromMessage.from_assistant_content(content) for content in message.content],
-        )
+        param = ChatCompletionAssistantMessageParam(role="assistant", content=content)
 
         if len(message.tool_calls):
-            param["tool_calls"] = [
-                ChatCompletionMessageToolCallParam(
-                    id=tool_call.id,
-                    type="function",
-                    function={
-                        "name": tool_call.name,
-                        "arguments": json.dumps(tool_call.arguments),
-                    },
-                )
-                for tool_call in message.tool_calls
-            ]
+            param["tool_calls"] = FromMessage.from_tool_calls(message.tool_calls)
 
         if message.name:
             param["name"] = message.name
@@ -138,7 +152,9 @@ class FromMessage:
     @staticmethod
     def from_tool_message(message: ToolMessage) -> ChatCompletionToolMessageParam:
         return ChatCompletionToolMessageParam(
-            role="tool", tool_call_id=message.tool_result.id, content=message.tool_result.result
+            role="tool",
+            tool_call_id=message.tool_result.id,
+            content=message.tool_result.result,
         )
 
     @staticmethod
@@ -150,7 +166,9 @@ class FromMessage:
         return param
 
     @staticmethod
-    def from_message(message: UserMessage | AssistantMessage | ToolMessage) -> ChatCompletionMessageParam:
+    def from_message(
+        message: UserMessage | AssistantMessage | ToolMessage,
+    ) -> ChatCompletionMessageParam | list[ChatCompletionMessageParam]:
         match message:
             case UserMessage():
                 return FromMessage.from_user_message(message)
@@ -158,6 +176,25 @@ class FromMessage:
                 return FromMessage.from_assistant_message(message)
             case ToolMessage():
                 return FromMessage.from_tool_message(message)
+
+    @staticmethod
+    def from_messages(
+        messages: typing.Sequence[Message],
+    ) -> tuple[list[ChatCompletionMessageParam], list[ChatCompletionSystemMessageParam]]:
+        messages_param = []
+        system_param = []
+
+        for message in messages:
+            if isinstance(message, SystemMessage):
+                system_param.extend(FromMessage.from_system_message(message))
+            else:
+                message_param = FromMessage.from_message(message)
+                if isinstance(message_param, list):
+                    messages_param.extend(message_param)
+                else:
+                    messages_param.append(message_param)
+
+        return messages_param, system_param
 
     @staticmethod
     def from_tools(tools: Tools | typing.Sequence[Tool]) -> list[ChatCompletionSystemMessageParam]:

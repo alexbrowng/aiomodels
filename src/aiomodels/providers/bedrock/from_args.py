@@ -8,7 +8,6 @@ from types_aiobotocore_bedrock_runtime.type_defs import (
 )
 
 from aiomodels.messages.message import Message
-from aiomodels.messages.system_message import SystemMessage
 from aiomodels.parameters.parameters import Parameters
 from aiomodels.providers.bedrock.from_message import FromMessage
 from aiomodels.providers.bedrock.from_parameters import FromParameters
@@ -35,14 +34,7 @@ class FromArgs:
         parameters: Parameters | None = None,
         response_format: ResponseFormat | None = None,
     ) -> RequestArgs:
-        system_param = []
-        messages_param = []
-
-        for message in messages:
-            if isinstance(message, SystemMessage):
-                system_param.append(FromMessage.from_system_message(message))
-            else:
-                messages_param.append(FromMessage.from_message(message))
+        messages_param, system_param = FromMessage.from_messages(messages)
 
         request = RequestArgs(modelId=model_id, messages=messages_param)
 

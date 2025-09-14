@@ -2,11 +2,11 @@ import typing
 
 from openai.types.chat import ChatCompletionToolParam
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
+from openai.types.shared_params.response_format_json_object import ResponseFormatJSONObject
 from openai.types.shared_params.response_format_json_schema import ResponseFormatJSONSchema
 from openai.types.shared_params.response_format_text import ResponseFormatText
 
 from aiomodels.messages.message import Message
-from aiomodels.messages.system_message import SystemMessage
 from aiomodels.parameters.parameters import Parameters
 from aiomodels.providers.openai.from_message import FromMessage
 from aiomodels.providers.openai.from_response_format import FromResponseFormat
@@ -25,7 +25,7 @@ class RequestArgs(typing.TypedDict):
     max_completion_tokens: typing.NotRequired[int]
     frequency_penalty: typing.NotRequired[float]
     presence_penalty: typing.NotRequired[float]
-    response_format: typing.NotRequired[ResponseFormatText | ResponseFormatJSONSchema]
+    response_format: typing.NotRequired[ResponseFormatText | ResponseFormatJSONObject | ResponseFormatJSONSchema]
     seed: typing.NotRequired[int]
     stop: typing.NotRequired[list[str]]
 
@@ -39,14 +39,7 @@ class FromArgs:
         parameters: Parameters | None,
         response_format: ResponseFormat | None,
     ) -> RequestArgs:
-        system_messages = []
-        chat_messages = []
-
-        for message in messages:
-            if isinstance(message, SystemMessage):
-                system_messages.append(FromMessage.from_system_message(message))
-            else:
-                chat_messages.append(FromMessage.from_message(message))
+        chat_messages, system_messages = FromMessage.from_messages(messages)
 
         request = RequestArgs(model=model, messages=system_messages + chat_messages)
 

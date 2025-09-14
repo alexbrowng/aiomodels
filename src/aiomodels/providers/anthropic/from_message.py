@@ -1,6 +1,7 @@
 import json
 import typing
 
+from anthropic.types import ToolUseBlockParam
 from anthropic.types.document_block_param import DocumentBlockParam
 from anthropic.types.image_block_param import ImageBlockParam
 from anthropic.types.message_param import MessageParam
@@ -18,6 +19,7 @@ from aiomodels.messages.system_message import SystemMessage
 from aiomodels.messages.tool_message import ToolMessage
 from aiomodels.messages.user_message import UserMessage
 from aiomodels.tools.tool import Tool
+from aiomodels.tools.tool_call import ToolCall
 from aiomodels.tools.tools import Tools
 
 IMAGE_MEDIA_TYPE = typing.Literal["image/png", "image/jpeg", "image/gif", "image/webp"]
@@ -25,6 +27,14 @@ DOCUMENT_MEDIA_TYPE = typing.Literal["application/pdf"]
 
 
 class FromMessage:
+    @staticmethod
+    def from_system_content(content: str | TextContent) -> TextBlockParam:
+        if isinstance(content, str):
+            return {"type": "text", "text": content}
+
+        if isinstance(content, TextContent):
+            return {"type": "text", "text": content.text}
+
     @staticmethod
     def from_user_content(
         content: str | TextContent | ImageContent | DocumentContent | AudioContent,
@@ -83,22 +93,33 @@ class FromMessage:
             return {"type": "text", "text": content.text}
 
     @staticmethod
-    def from_system_content(content: str | TextContent) -> TextBlockParam:
-        if isinstance(content, str):
-            return {"type": "text", "text": content}
-
-        if isinstance(content, TextContent):
-            return {"type": "text", "text": content.text}
+    def from_tool_calls(tool_calls: typing.Sequence[ToolCall]) -> list[ToolUseBlockParam]:
+        return [
+            {
+                "type": "tool_use",
+                "id": tool_call.id,
+                "name": tool_call.name,
+                "input": json.loads(tool_call.arguments) if tool_call.arguments else {},
+            }
+            for tool_call in tool_calls
+        ]
 
     @staticmethod
-    def from_user_message(message: UserMessage) -> MessageParam:
+    def from_user_message(message: UserMessage) -> MessageParam | list[MessageParam]:
+        messages_param: list[MessageParam] = []
+
         content = []
         if isinstance(message.content, str):
             content.append(FromMessage.from_user_content(message.content))
         else:
             content.extend([FromMessage.from_user_content(c) for c in message.content])
 
-        return {"role": "user", "content": content}
+        messages_param.append({"role": "user", "content": content})
+
+        if message.tool_calls:
+            messages_param.append({"role": "assistant", "content": FromMessage.from_tool_calls(message.tool_calls)})
+
+        return messages_param
 
     @staticmethod
     def from_assistant_message(message: AssistantMessage) -> MessageParam:
@@ -140,7 +161,7 @@ class FromMessage:
         return [FromMessage.from_system_content(message.content)]
 
     @staticmethod
-    def from_message(message: UserMessage | AssistantMessage | ToolMessage) -> MessageParam:
+    def from_message(message: UserMessage | AssistantMessage | ToolMessage) -> MessageParam | list[MessageParam]:
         match message:
             case UserMessage():
                 return FromMessage.from_user_message(message)
@@ -158,7 +179,11 @@ class FromMessage:
             if isinstance(message, SystemMessage):
                 system_param.extend(FromMessage.from_system_message(message))
             else:
-                messages_param.append(FromMessage.from_message(message))
+                message_param = FromMessage.from_message(message)
+                if isinstance(message_param, list):
+                    messages_param.extend(message_param)
+                else:
+                    messages_param.append(message_param)
 
         return messages_param, system_param
 
